@@ -1,0 +1,62 @@
+NAME
+    ypb - YouTube Playlist Backup script
+
+SYNOPSIS
+    ypb.py
+    ypb.py [-c channelID]
+
+DESCRIPTION
+    ypb is a script which retrieves the playlists of a YouTube channel. It
+    uses YouTube Data API v3 for accessing the channel's information, and is
+    implemented using the Google APIs Client Library for Python. Complete
+    backups of public and/or private playlists are possible.
+
+    Note: This is not a Youtube video downloader. This script simply stores
+    YouTube playlist information in plaintext, which is helpful when videos
+    are unxexpectedly deleted.
+
+USAGE
+    There are two ways to use the script. Without arguments, ypb will
+    retrieve all of the user's playlists, including private ones. This method
+    requires that the user
+    allow access to their YouTube account. The script uses the OAuth 2.0
+    protocol for this purpose. It will direct the user to an authentication
+    page using a web browser, at which point they may allow access through
+    Google's authorization server.
+
+    With the -c option, the supplied channel ID is used to retrieve only
+    public playlists. No authorization process is required for this method.
+
+    Backups are placed in directories with the following timestamp format:
+    %Y%m%d-%H%M%S.
+
+OPTIONS
+    -c, --channelid
+        Retrieve public playlists for the supplied YouTube channel. No
+        authentication is required. The channel ID is embedded in the URL when
+        accessing channel-related content, e.g. youtube.com/channel/CHANNELID.
+        It may also be viewed via My Channel or by accessing YouTube settings
+        -> Advanced -> Account Information.
+
+CREDENTIALS
+    To communicate with YouTube Data API the script requires proper
+    authorization credentials. Since the keys and files required for
+    authorization are not provided, it is up to the user to obtain them. For
+    authenticated requests, the client-secrets.json file is required. For
+    non-authenticated requests, an API key is required. Please see
+    https://developers.google.com/youtube/registering_an_application for more
+    information regarding authorization credentials.
+
+FILES
+    config.py
+        Basic configuration file. 
+
+    client-secrets.json
+        Required for authenticated requests. See CREDENTIALS.
+
+    ypb.py-oauth2.json
+        Created during authenticated requests. See CREDENTIALS.
+
+AUTHOR
+    Roberto Gomez, Jr.
+
