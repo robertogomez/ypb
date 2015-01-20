@@ -38,8 +38,8 @@ def backup_playlists(youtube, playlists_request):
                     playlist_items_response = playlist_items_request.execute()
 
                     # Print videos in each playlist
-                    for video in playlist_items_response["items"]:
-                        f.write(video["snippet"]["title"].encode("utf-8") + '\n')
+                    for i, video in enumerate(playlist_items_response["items"], start=1):
+                        f.write("{}. ".format(i) + video["snippet"]["title"].encode("utf-8") + '\n')
 
                     # Request next page of videos
                     playlist_items_request = youtube.playlistItems().list_next(
