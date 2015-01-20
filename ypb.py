@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import argparse
 import httplib2
 from config import *
 from apiclient.discovery import build
@@ -91,8 +92,12 @@ def setup_channelid_request(options):
     backup_playlists(youtube, playlists_request);
 
 if __name__ == "__main__":
-    argparser.add_argument("-c", "--channelid", help="Use channel ID instead of authenticated request")
-    args = argparser.parse_args()
+    parser = argparse.ArgumentParser(description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[argparser])
+
+    parser.add_argument("-c", "--channelid", help="Use channel ID instead of authenticated request")
+    args = parser.parse_args()
 
     try:
         if args.channelid:
