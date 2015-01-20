@@ -47,6 +47,10 @@ CREDENTIALS
     https://developers.google.com/youtube/registering_an_application for more
     information regarding authorization credentials.
 
+REQUIREMENTS
+    Python 2.7
+    google-api-python-client
+
 FILES
     config.py
         Basic configuration file. 
