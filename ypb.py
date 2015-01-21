@@ -17,11 +17,17 @@ def backup_playlists(youtube, playlists_request):
     path = time.strftime("%Y%m%d-%H%M%S")
     os.mkdir(path)
 
+    playlist_page = 0
+
     # Fetch pages of playlists until end
     while playlists_request:
         playlists_response = playlists_request.execute()
 
-        for playlist in playlists_response["items"]:
+        for i, playlist in enumerate(playlists_response["items"], start=1):
+            print "Saving playlist {} of {}".format(i + playlist_page * 50, playlists_response["pageInfo"]["totalResults"]), "\r",
+            sys.stdout.flush()
+
+            # Create new file for playlist
             # Assemble request for videos in each playlist
             playlist_items_request = youtube.playlistItems().list(
                 part="id,snippet",
@@ -30,7 +36,6 @@ def backup_playlists(youtube, playlists_request):
                 maxResults=50
             )
 
-            # Create new file for playlist
             with open(os.path.join(path, playlist["snippet"]["title"]), 'w') as f:
 
                 # Fetch pages of videos until end
@@ -51,6 +56,10 @@ def backup_playlists(youtube, playlists_request):
         playlists_request = youtube.playlists().list_next(
             playlists_request, playlists_response)
 
+        playlist_page += 1
+
+    print "\r"
+
 # Creates request for retrieving all the user's playlists (including private
 # ones). Script is authorized via OAuth 2.0 protocol.
 def setup_auth_request(options):
@@ -69,7 +78,7 @@ def setup_auth_request(options):
 
     playlists_request = youtube.playlists().list(
         part="id,snippet",
-        fields="items(id,snippet/title),nextPageToken",
+        fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
         mine="true",
         maxResults=50
     )
@@ -84,7 +93,7 @@ def setup_channelid_request(options):
 
     playlists_request = youtube.playlists().list(
         part="id,snippet",
-        fields="items(id,snippet/title),nextPageToken",
+        fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
         channelId=options.channelid,
         maxResults=50
     )
