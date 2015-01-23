@@ -100,17 +100,46 @@ def setup_channelid_request(options):
 
     backup_playlists(youtube, playlists_request);
 
+# Create request using legacy YouTube username
+def setup_youtube_username_request(options):
+    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+        developerKey=DEVELOPER_KEY)
+
+    # Create channel request to obtain channel id from YouTube username
+    channel_request = youtube.channels().list(
+        part="id",
+        forUsername=options.youtube_username,
+        maxResults=50
+    )
+
+    channel_response = channel_request.execute()
+
+    try:
+        playlists_request = youtube.playlists().list(
+            part="id,snippet",
+            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+            channelId=channel_response["items"][0]["id"],
+            maxResults=50
+        )
+    except IndexError:
+        sys.exit("No channel found for {}".format(options.youtube_username))
+
+    backup_playlists(youtube, playlists_request);
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         parents=[argparser])
 
     parser.add_argument("-c", "--channelid", help="Use channel ID instead of authenticated request")
+    parser.add_argument("-y", "--youtube-username", help="Retrieve playlists using legacy YouTube username")
     args = parser.parse_args()
 
     try:
         if args.channelid:
             setup_channelid_request(args)
+        elif args.youtube_username:
+            setup_youtube_username_request(args)
         else:
             setup_auth_request(args)
     except HttpError, e:
