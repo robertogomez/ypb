@@ -60,69 +60,62 @@ def backup_playlists(youtube, playlists_request):
 
     print "\r"
 
-# Creates request for retrieving all the user's playlists (including private
-# ones). Script is authorized via OAuth 2.0 protocol.
-def setup_auth_request(options):
-    flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
-        message=MISSING_CLIENT_SECRETS_MESSAGE,
-        scope=YOUTUBE_READONLY_SCOPE)
+# Creates the initial playlists request used in backup_playlists()
+# Checks the commandline arguments and assembles the correct request
+# Sets up OAuth 2.0 for authorized requests if necessary
+def setup_request(options):
+    if (options.channelid):
+        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+            developerKey=DEVELOPER_KEY)
 
-    storage = Storage("%s-oauth2.json" % sys.argv[0])
-    credentials = storage.get()
-
-    if credentials is None or credentials.invalid:
-        credentials = run_flow(flow, storage, options)
-
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-        http=credentials.authorize(httplib2.Http()))
-
-    playlists_request = youtube.playlists().list(
-        part="id,snippet",
-        fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-        mine="true",
-        maxResults=50
-    )
-
-    backup_playlists(youtube, playlists_request);
-
-# Creates request for retrieving the user's public playlists using channel ID.
-# Script is authorized via developer key.
-def setup_channelid_request(options):
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-        developerKey=DEVELOPER_KEY)
-
-    playlists_request = youtube.playlists().list(
-        part="id,snippet",
-        fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-        channelId=options.channelid,
-        maxResults=50
-    )
-
-    backup_playlists(youtube, playlists_request);
-
-# Create request using legacy YouTube username
-def setup_youtube_username_request(options):
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-        developerKey=DEVELOPER_KEY)
-
-    # Create channel request to obtain channel id from YouTube username
-    channel_request = youtube.channels().list(
-        part="id",
-        forUsername=options.youtube_username,
-        maxResults=50
-    )
-
-    channel_response = channel_request.execute()
-
-    try:
         playlists_request = youtube.playlists().list(
             part="id,snippet",
             fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-            channelId=channel_response["items"][0]["id"],
+            channelId=options.channelid,
             maxResults=50
         )
-    except IndexError:
-        sys.exit("No channel found for {}".format(options.youtube_username))
+    elif (options.youtube_username):
+        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+            developerKey=DEVELOPER_KEY)
+
+        # Create channel request to obtain channel id from YouTube username
+        channel_request = youtube.channels().list(
+            part="id",
+            forUsername=options.youtube_username,
+            maxResults=50
+        )
+
+        channel_response = channel_request.execute()
+
+        try:
+            playlists_request = youtube.playlists().list(
+                part="id,snippet",
+                fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+                channelId=channel_response["items"][0]["id"],
+                maxResults=50
+            )
+        except IndexError:
+            sys.exit("No channel found for {}".format(options.youtube_username))
+    else:
+        flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
+            message=MISSING_CLIENT_SECRETS_MESSAGE,
+            scope=YOUTUBE_READONLY_SCOPE)
+
+        storage = Storage("%s-oauth2.json" % sys.argv[0])
+        credentials = storage.get()
+
+        if credentials is None or credentials.invalid:
+            credentials = run_flow(flow, storage, options)
+
+        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+            http=credentials.authorize(httplib2.Http()))
+
+        playlists_request = youtube.playlists().list(
+            part="id,snippet",
+            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+            mine="true",
+            maxResults=50
+        )
 
     backup_playlists(youtube, playlists_request);
 
@@ -136,12 +129,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        if args.channelid:
-            setup_channelid_request(args)
-        elif args.youtube_username:
-            setup_youtube_username_request(args)
-        else:
-            setup_auth_request(args)
+        setup_request(args)
     except HttpError, e:
         print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
 
