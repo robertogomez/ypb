@@ -13,7 +13,7 @@ from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
 
 # Backs-up playlists using the provided request
-def backup_playlists(youtube, playlists_request):
+def backup_playlists(playlists_request):
     path = time.strftime("%Y%m%d-%H%M%S")
     os.mkdir(path)
 
@@ -64,11 +64,13 @@ def backup_playlists(youtube, playlists_request):
 # Checks the commandline arguments and assembles the correct request
 # Sets up OAuth 2.0 for authorized requests if necessary
 def setup_request(options):
+    global youtube
+
     if (options.channelid):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             developerKey=DEVELOPER_KEY)
 
-        playlists_request = youtube.playlists().list(
+        request = youtube.playlists().list(
             part="id,snippet",
             fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
             channelId=options.channelid,
@@ -88,7 +90,7 @@ def setup_request(options):
         channel_response = channel_request.execute()
 
         try:
-            playlists_request = youtube.playlists().list(
+            request = youtube.playlists().list(
                 part="id,snippet",
                 fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
                 channelId=channel_response["items"][0]["id"],
@@ -110,14 +112,14 @@ def setup_request(options):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             http=credentials.authorize(httplib2.Http()))
 
-        playlists_request = youtube.playlists().list(
+        request = youtube.playlists().list(
             part="id,snippet",
             fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
             mine="true",
             maxResults=50
         )
 
-    backup_playlists(youtube, playlists_request);
+    return request
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__,
@@ -128,8 +130,11 @@ if __name__ == "__main__":
     parser.add_argument("-y", "--youtube-username", help="Retrieve playlists using legacy YouTube username")
     args = parser.parse_args()
 
+    youtube = None
+
     try:
-        setup_request(args)
+        req = setup_request(args)
+        backup_playlists(req)
     except HttpError, e:
         print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
 
