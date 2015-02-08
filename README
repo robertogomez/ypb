@@ -3,7 +3,9 @@ NAME
 
 SYNOPSIS
     ypb.py
-    ypb.py [-c channelID]
+    ypb.py [-h]
+    ypb.py [-i ID]
+    ypb.py [-u USERNAME]
 
 DESCRIPTION
     ypb is a script which retrieves the playlists of a YouTube channel. It
@@ -16,27 +18,39 @@ DESCRIPTION
     are unxexpectedly deleted.
 
 USAGE
-    There are two ways to use the script. Without arguments, ypb will
+    There are three ways to use the script. Without arguments, ypb will
     retrieve all of the user's playlists, including private ones. This method
-    requires that the user
-    allow access to their YouTube account. The script uses the OAuth 2.0
-    protocol for this purpose. It will direct the user to an authentication
-    page using a web browser, at which point they may allow access through
-    Google's authorization server.
+    requires that the user allow access to their YouTube account. The script
+    uses the OAuth 2.0 protocol for this purpose. It will direct the user to
+    an authentication page using a web browser, at which point they may allow
+    access through Google's authorization server.
 
-    With the -c option, the supplied channel ID is used to retrieve only
+    With the -i option, the supplied channel ID is used to retrieve only
+    public playlists. No authorization process is required for this method.
+
+    With the -u option, the supplied YouTube username is used to retrieve only
     public playlists. No authorization process is required for this method.
 
     Backups are placed in directories with the following timestamp format:
     %Y%m%d-%H%M%S.
 
 OPTIONS
-    -c, --channelid
-        Retrieve public playlists for the supplied YouTube channel. No
+    -h, --help
+        Show the help message and exit.
+
+    -i, --id
+        Retrieve public playlists for the supplied YouTube channel ID. No
         authentication is required. The channel ID is embedded in the URL when
         accessing channel-related content, e.g. youtube.com/channel/CHANNELID.
         It may also be viewed via My Channel or by accessing YouTube settings
         -> Advanced -> Account Information.
+
+    -u, --username
+        Retrieve public playlists for the supplied legacy YouTube username. No
+        authentication is required. Usernames were used by YouTube before it
+        was acquired by Google, although they are still supported for older
+        accounts. Usernames should not be confused with display names, which
+        do not uniquely identify a channel.
 
 CREDENTIALS
     To communicate with YouTube Data API the script requires proper
