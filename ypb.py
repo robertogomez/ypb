@@ -62,19 +62,19 @@ def backup_playlists(playlists_request):
 
 # Creates the initial playlists request used in backup_playlists()
 # Checks the commandline arguments and assembles the correct request
-def setup_request(options):
-    if (options.channelid):
+def setup_request():
+    if (args.channelid):
         request = youtube.playlists().list(
             part="id,snippet",
             fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-            channelId=options.channelid,
+            channelId=args.channelid,
             maxResults=50
         )
-    elif (options.youtube_username):
+    elif (args.youtube_username):
         # Create channel request to obtain channel id from YouTube username
         channel_request = youtube.channels().list(
             part="id",
-            forUsername=options.youtube_username,
+            forUsername=args.youtube_username,
             maxResults=50
         )
 
@@ -88,7 +88,7 @@ def setup_request(options):
                 maxResults=50
             )
         except IndexError:
-            sys.exit("No channel found for {}".format(options.youtube_username))
+            sys.exit("No channel found for {}".format(args.youtube_username))
     else:
         request = youtube.playlists().list(
             part="id,snippet",
@@ -101,10 +101,10 @@ def setup_request(options):
 
 # Creates the resource object for interacting with the YouTube API
 # Sets up OAuth 2.0 for authorized requests if necessary
-def create_resource_obj(options):
+def create_resource_obj():
     global youtube
 
-    if (options.channelid or options.youtube_username):
+    if (args.channelid or args.youtube_username):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             developerKey=DEVELOPER_KEY)
     else:
@@ -116,7 +116,7 @@ def create_resource_obj(options):
         credentials = storage.get()
 
         if credentials is None or credentials.invalid:
-            credentials = run_flow(flow, storage, options)
+            credentials = run_flow(flow, storage, args)
 
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             http=credentials.authorize(httplib2.Http()))
@@ -133,8 +133,8 @@ if __name__ == "__main__":
     youtube = None
 
     try:
-        create_resource_obj(args)
-        req = setup_request(args)
+        create_resource_obj()
+        req = setup_request()
         backup_playlists(req)
     except HttpError, e:
         print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
