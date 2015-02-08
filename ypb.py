@@ -12,6 +12,67 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
 
+# Creates the resource object for interacting with the YouTube API
+# Sets up OAuth 2.0 for authorized requests if necessary
+def create_resource_obj():
+    global youtube
+
+    if (args.channelid or args.youtube_username):
+        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+            developerKey=DEVELOPER_KEY)
+    else:
+        flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
+            message=MISSING_CLIENT_SECRETS_MESSAGE,
+            scope=YOUTUBE_READONLY_SCOPE)
+
+        storage = Storage("%s-oauth2.json" % sys.argv[0])
+        credentials = storage.get()
+
+        if credentials is None or credentials.invalid:
+            credentials = run_flow(flow, storage, args)
+
+        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+            http=credentials.authorize(httplib2.Http()))
+
+# Creates the initial playlists request used in backup_playlists()
+# Checks the commandline arguments and assembles the correct request
+def setup_request():
+    if (args.channelid):
+        request = youtube.playlists().list(
+            part="id,snippet",
+            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+            channelId=args.channelid,
+            maxResults=50
+        )
+    elif (args.youtube_username):
+        # Create channel request to obtain channel id from YouTube username
+        channel_request = youtube.channels().list(
+            part="id",
+            forUsername=args.youtube_username,
+            maxResults=50
+        )
+
+        channel_response = channel_request.execute()
+
+        try:
+            request = youtube.playlists().list(
+                part="id,snippet",
+                fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+                channelId=channel_response["items"][0]["id"],
+                maxResults=50
+            )
+        except IndexError:
+            sys.exit("No channel found for {}".format(args.youtube_username))
+    else:
+        request = youtube.playlists().list(
+            part="id,snippet",
+            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+            mine="true",
+            maxResults=50
+        )
+
+    return request
+
 # Backs-up playlists using the provided request
 def backup_playlists(playlists_request):
     path = time.strftime("%Y%m%d-%H%M%S")
@@ -59,67 +120,6 @@ def backup_playlists(playlists_request):
         playlist_page += 1
 
     print "\r"
-
-# Creates the initial playlists request used in backup_playlists()
-# Checks the commandline arguments and assembles the correct request
-def setup_request():
-    if (args.channelid):
-        request = youtube.playlists().list(
-            part="id,snippet",
-            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-            channelId=args.channelid,
-            maxResults=50
-        )
-    elif (args.youtube_username):
-        # Create channel request to obtain channel id from YouTube username
-        channel_request = youtube.channels().list(
-            part="id",
-            forUsername=args.youtube_username,
-            maxResults=50
-        )
-
-        channel_response = channel_request.execute()
-
-        try:
-            request = youtube.playlists().list(
-                part="id,snippet",
-                fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-                channelId=channel_response["items"][0]["id"],
-                maxResults=50
-            )
-        except IndexError:
-            sys.exit("No channel found for {}".format(args.youtube_username))
-    else:
-        request = youtube.playlists().list(
-            part="id,snippet",
-            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-            mine="true",
-            maxResults=50
-        )
-
-    return request
-
-# Creates the resource object for interacting with the YouTube API
-# Sets up OAuth 2.0 for authorized requests if necessary
-def create_resource_obj():
-    global youtube
-
-    if (args.channelid or args.youtube_username):
-        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-            developerKey=DEVELOPER_KEY)
-    else:
-        flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
-            message=MISSING_CLIENT_SECRETS_MESSAGE,
-            scope=YOUTUBE_READONLY_SCOPE)
-
-        storage = Storage("%s-oauth2.json" % sys.argv[0])
-        credentials = storage.get()
-
-        if credentials is None or credentials.invalid:
-            credentials = run_flow(flow, storage, args)
-
-        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-            http=credentials.authorize(httplib2.Http()))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__,
