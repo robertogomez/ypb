@@ -17,7 +17,7 @@ from oauth2client.tools import argparser, run_flow
 def create_resource_obj():
     global youtube
 
-    if (args.channelid or args.youtube_username):
+    if (args.id or args.username):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             developerKey=DEVELOPER_KEY)
     else:
@@ -37,18 +37,18 @@ def create_resource_obj():
 # Creates the initial playlists request used in backup_playlists()
 # Checks the commandline arguments and assembles the correct request
 def setup_request():
-    if (args.channelid):
+    if (args.id):
         request = youtube.playlists().list(
             part="id,snippet",
             fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-            channelId=args.channelid,
+            channelId=args.id,
             maxResults=50
         )
-    elif (args.youtube_username):
+    elif (args.username):
         # Create channel request to obtain channel id from YouTube username
         channel_request = youtube.channels().list(
             part="id",
-            forUsername=args.youtube_username,
+            forUsername=args.username,
             maxResults=50
         )
 
@@ -62,7 +62,7 @@ def setup_request():
                 maxResults=50
             )
         except IndexError:
-            sys.exit("No channel found for {}".format(args.youtube_username))
+            sys.exit("No channel found for {}".format(args.username))
     else:
         request = youtube.playlists().list(
             part="id,snippet",
@@ -126,8 +126,8 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         parents=[argparser])
 
-    parser.add_argument("-c", "--channelid", help="Use channel ID instead of authenticated request")
-    parser.add_argument("-y", "--youtube-username", help="Retrieve playlists using legacy YouTube username")
+    parser.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
+    parser.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
     args = parser.parse_args()
 
     youtube = None
