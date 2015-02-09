@@ -75,7 +75,10 @@ def setup_request():
 
 # Backs-up playlists using the provided request
 def backup_playlists(playlists_request):
-    path = time.strftime("%Y%m%d-%H%M%S")
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+
+    path = os.path.join(args.directory, timestamp) if args.directory else timestamp
+
     os.mkdir(path)
 
     playlist_page = 0
@@ -126,6 +129,7 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         parents=[argparser])
 
+    parser.add_argument("-d", "--directory", help="Parent directory to save backup")
     parser.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
     parser.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
     args = parser.parse_args()
