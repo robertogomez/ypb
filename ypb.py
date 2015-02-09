@@ -79,7 +79,10 @@ def backup_playlists(playlists_request):
 
     path = os.path.join(args.directory, timestamp) if args.directory else timestamp
 
-    os.mkdir(path)
+    try:
+        os.mkdir(path)
+    except OSError as e:
+        sys.exit("{}: '{}'".format(e.strerror, e.filename))
 
     playlist_page = 0
 
