@@ -143,6 +143,6 @@ if __name__ == "__main__":
         create_resource_obj()
         req = setup_request()
         backup_playlists(req)
-    except HttpError, e:
+    except HttpError as e:
         print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
 
