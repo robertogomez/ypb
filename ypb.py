@@ -128,13 +128,13 @@ def backup_playlists(playlists_request):
     print "\r"
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__,
+    parser = argparse.ArgumentParser(description="YouTube Playlist Backup script",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         parents=[argparser])
-
+    retrieval_method = parser.add_mutually_exclusive_group()
     parser.add_argument("-d", "--directory", help="Parent directory to save backup")
-    parser.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
-    parser.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
+    retrieval_method.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
+    retrieval_method.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
     args = parser.parse_args()
 
     youtube = None
