@@ -17,7 +17,7 @@ from oauth2client.tools import argparser, run_flow
 def create_resource_obj():
     global youtube
 
-    if (args.id or args.username):
+    if (ident or uname):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             developerKey=DEVELOPER_KEY)
     else:
@@ -35,20 +35,20 @@ def create_resource_obj():
             http=credentials.authorize(httplib2.Http()))
 
 # Creates the initial playlists request used in backup_playlists()
-# Checks the commandline arguments and assembles the correct request
+# Checks the options to assemble the correct request
 def setup_request():
-    if (args.id):
+    if (ident):
         request = youtube.playlists().list(
             part="id,snippet",
             fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
-            channelId=args.id,
+            channelId=ident,
             maxResults=50
         )
-    elif (args.username):
+    elif (uname):
         # Create channel request to obtain channel id from YouTube username
         channel_request = youtube.channels().list(
             part="id",
-            forUsername=args.username,
+            forUsername=uname,
             maxResults=50
         )
 
@@ -62,7 +62,7 @@ def setup_request():
                 maxResults=50
             )
         except IndexError:
-            sys.exit("No channel found for {}".format(args.username))
+            sys.exit("No channel found for {}".format(uname))
     else:
         request = youtube.playlists().list(
             part="id,snippet",
@@ -77,7 +77,7 @@ def setup_request():
 def backup_playlists(playlists_request):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
 
-    path = os.path.join(args.directory, timestamp) if args.directory else timestamp
+    path = os.path.join(dir, timestamp) if dir else timestamp
 
     try:
         os.mkdir(path)
@@ -136,6 +136,23 @@ if __name__ == "__main__":
     retrieval_method.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
     retrieval_method.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
     args = parser.parse_args()
+
+    # Process user options
+    # Check the commandline arguments first, then the config vars if specified
+    try:
+        ident = args.id if (args.id) else CHANNELID
+    except NameError:
+        ident = None
+
+    try:
+        uname = args.username if (args.username) else USERNAME
+    except NameError:
+        uname = None
+
+    try:
+        dir = args.directory if (args.directory) else DIRECTORY
+    except NameError:
+        dir = None
 
     youtube = None
 

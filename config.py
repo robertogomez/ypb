@@ -1,7 +1,13 @@
 import os
 
+# Required entries
 DEVELOPER_KEY = "YOUR_DEV_KEY"
 CLIENT_SECRETS_FILE = "client_secrets.json"
+
+# Optional configurations
+#CHANNELID = ""
+#USERNAME = ""
+#DIRECTORY = ""
 
 MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
