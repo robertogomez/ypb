@@ -40,7 +40,7 @@ def setup_request():
     if (ident):
         request = youtube.playlists().list(
             part="id,snippet",
-            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+            fields="items(id,snippet/title),nextPageToken",
             channelId=ident,
             maxResults=50
         )
@@ -57,7 +57,7 @@ def setup_request():
         try:
             request = youtube.playlists().list(
                 part="id,snippet",
-                fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+                fields="items(id,snippet/title),nextPageToken",
                 channelId=channel_response["items"][0]["id"],
                 maxResults=50
             )
@@ -66,7 +66,7 @@ def setup_request():
     else:
         request = youtube.playlists().list(
             part="id,snippet",
-            fields="items(id,snippet/title),nextPageToken,pageInfo/totalResults",
+            fields="items(id,snippet/title),nextPageToken",
             mine="true",
             maxResults=50
         )
@@ -75,26 +75,11 @@ def setup_request():
 
 # Backs-up playlists using the provided request
 def backup_playlists(playlists_request):
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-
-    path = os.path.join(dir, timestamp) if dir else timestamp
-
-    try:
-        os.mkdir(path)
-    except OSError as e:
-        sys.exit("{}: '{}'".format(e.strerror, e.filename))
-
-    playlist_page = 0
-
     # Fetch pages of playlists until end
     while playlists_request:
         playlists_response = playlists_request.execute()
 
-        for i, playlist in enumerate(playlists_response["items"], start=1):
-            print "Saving playlist {} of {}".format(i + playlist_page * 50, playlists_response["pageInfo"]["totalResults"]), "\r",
-            sys.stdout.flush()
-
-            # Create new file for playlist
+        for playlist in playlists_response["items"]:
             # Assemble request for videos in each playlist
             playlist_items_request = youtube.playlistItems().list(
                 part="id,snippet",
@@ -103,29 +88,25 @@ def backup_playlists(playlists_request):
                 maxResults=50
             )
 
-            with open(os.path.join(path, playlist["snippet"]["title"]), 'w') as f:
+            # Fetch pages of videos until end
+            while playlist_items_request:
+                playlist_items_response = playlist_items_request.execute()
 
-                # Fetch pages of videos until end
-                while playlist_items_request:
-                    playlist_items_response = playlist_items_request.execute()
+                print "{}".format(playlist["snippet"]["title"])
 
-                    # Print videos in each playlist
-                    for i, video in enumerate(playlist_items_response["items"], start=1):
-                        f.write("{}. ".format(i) + video["snippet"]["title"].encode("utf-8") + '\n')
+                # Print videos in each playlist
+                for i, video in enumerate(playlist_items_response["items"], start=1):
+                    print "{}. {}".format((i), video["snippet"]["title"].encode("utf-8"))
 
-                    # Request next page of videos
-                    playlist_items_request = youtube.playlistItems().list_next(
-                        playlist_items_request, playlist_items_response)
+                print
 
-            f.close()
+                # Request next page of videos
+                playlist_items_request = youtube.playlistItems().list_next(
+                    playlist_items_request, playlist_items_response)
 
         # Request next page of playlists
         playlists_request = youtube.playlists().list_next(
             playlists_request, playlists_response)
-
-        playlist_page += 1
-
-    print "\r"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YouTube Playlist Backup script",
