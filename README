@@ -8,14 +8,15 @@ SYNOPSIS
     ypb.py [-u USERNAME]
 
 DESCRIPTION
-    ypb is a script which retrieves the playlists of a YouTube channel. It
-    uses YouTube Data API v3 for accessing the channel's information, and is
-    implemented using the Google APIs Client Library for Python. Complete
-    backups of public and/or private playlists are possible.
+    ypb is a Python script which retrieves the playlists of a YouTube channel.
+    It uses YouTube Data API v3 for accessing the channel's information, and
+    is implemented using the Google API Client Library for Python. Complete
+    backups of public and/or private playlists are possible. Playlist
+    information is sent to stdout.
 
-    Note: This is not a Youtube video downloader. This script simply stores
-    YouTube playlist information in plaintext, which is helpful when videos
-    are unxexpectedly deleted.
+    Note: This is not a Youtube video downloader. The purpose of the script is
+    for recording playlist information, which is useful when videos are
+    unexpectedly deleted from YouTube.
 
 USAGE
     There are three ways to use the script. Without arguments, ypb will
@@ -30,9 +31,6 @@ USAGE
 
     With the -u option, the supplied YouTube username is used to retrieve only
     public playlists. No authorization process is required for this method.
-
-    Backups are placed in directories with the following timestamp format:
-    %Y%m%d-%H%M%S.
 
 OPTIONS
     -h, --help
