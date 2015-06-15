@@ -113,7 +113,6 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         parents=[argparser])
     retrieval_method = parser.add_mutually_exclusive_group()
-    parser.add_argument("-d", "--directory", help="Parent directory to save backup")
     retrieval_method.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
     retrieval_method.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
     args = parser.parse_args()
@@ -129,11 +128,6 @@ if __name__ == "__main__":
         uname = args.username if (args.username) else USERNAME
     except NameError:
         uname = None
-
-    try:
-        dir = args.directory if (args.directory) else DIRECTORY
-    except NameError:
-        dir = None
 
     youtube = None
 
