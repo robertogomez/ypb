@@ -34,42 +34,48 @@ def create_resource_obj():
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             http=credentials.authorize(httplib2.Http()))
 
-# Creates the initial playlists request used in backup_playlists()
-# Checks the options to assemble the correct request
-def setup_request():
-    if (ident):
-        request = youtube.playlists().list(
-            part="id,snippet",
-            fields="items(id,snippet/title),nextPageToken",
-            channelId=ident,
-            maxResults=50
-        )
-    elif (uname):
-        # Create channel request to obtain channel id from YouTube username
-        channel_request = youtube.channels().list(
-            part="id",
-            forUsername=uname,
-            maxResults=50
-        )
+# Creates a request for the user's playlists using their channel ID
+def setup_id_request():
+   request = youtube.playlists().list(
+       part="id,snippet",
+       fields="items(id,snippet/title),nextPageToken",
+       channelId=ident,
+       maxResults=50
+   )
 
-        channel_response = channel_request.execute()
+   return request
 
-        try:
-            request = youtube.playlists().list(
-                part="id,snippet",
-                fields="items(id,snippet/title),nextPageToken",
-                channelId=channel_response["items"][0]["id"],
-                maxResults=50
-            )
-        except IndexError:
-            sys.exit("No channel found for {}".format(uname))
-    else:
-        request = youtube.playlists().list(
-            part="id,snippet",
-            fields="items(id,snippet/title),nextPageToken",
-            mine="true",
-            maxResults=50
-        )
+# Creates a request for the user's playlists using their username
+# First uses a channel request to obtain channel ID from username
+def setup_username_request():
+   channel_request = youtube.channels().list(
+       part="id",
+       forUsername=uname,
+       maxResults=50
+   )
+
+   channel_response = channel_request.execute()
+
+   try:
+       request = youtube.playlists().list(
+           part="id,snippet",
+           fields="items(id,snippet/title),nextPageToken",
+           channelId=channel_response["items"][0]["id"],
+           maxResults=50
+       )
+   except IndexError:
+       sys.exit("No channel found for {}".format(uname))
+
+   return request
+
+# Creates an authenticated request for accessing the user's private playlists
+def setup_private_request():
+    request = youtube.playlists().list(
+        part="id,snippet",
+        fields="items(id,snippet/title),nextPageToken",
+        mine="true",
+        maxResults=50
+    )
 
     return request
 
@@ -133,7 +139,14 @@ if __name__ == "__main__":
 
     try:
         create_resource_obj()
-        req = setup_request()
+
+        if (ident):
+            req = setup_id_request()
+        elif (uname):
+            req = setup_username_request()
+        else:
+            req = setup_private_request()
+
         backup_playlists(req)
     except HttpError as e:
         print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
