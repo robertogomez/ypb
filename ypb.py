@@ -79,6 +79,45 @@ def setup_private_request():
 
     return request
 
+# Create request for obtaining the user's related playlists
+def setup_related_request():
+    playlist_id_list = []
+
+    if (ident):
+        channel_request = youtube.channels().list(
+            part="contentDetails",
+            fields="items(contentDetails/relatedPlaylists)",
+            id=ident
+        )
+    elif (uname):
+        channel_request = youtube.channels().list(
+            part="contentDetails",
+            fields="items(contentDetails/relatedPlaylists)",
+            forUsername=uname
+        )
+    else:
+        channel_request = youtube.channels().list(
+            part="contentDetails",
+            fields="items(contentDetails/relatedPlaylists)",
+            mine="true"
+        )
+
+    channel_response = channel_request.execute()
+
+    # Traverse channel_response to create list of related playlist IDs
+    for channel in channel_response["items"]:
+        for playlist, playlist_id in channel["contentDetails"]["relatedPlaylists"].items():
+            playlist_id_list.append(playlist_id)
+
+    request = youtube.playlists().list(
+        part="id,snippet",
+        fields="items(id,snippet/title),nextPageToken",
+        id=",".join(playlist_id_list),
+        maxResults=50
+    )
+
+    return request
+
 # Backs-up playlists using the provided request
 def backup_playlists(playlists_request):
     # Fetch pages of playlists until end
@@ -121,6 +160,8 @@ if __name__ == "__main__":
     retrieval_method = parser.add_mutually_exclusive_group()
     retrieval_method.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
     retrieval_method.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
+    parser.add_argument("-r", "--related", help="Also retrieve related playlists (likes, history, etc.",
+                        action="store_true")
     args = parser.parse_args()
 
     # Process user options
@@ -135,6 +176,11 @@ if __name__ == "__main__":
     except NameError:
         uname = None
 
+    try:
+        rel = args.related if (args.related) else RELATED
+    except NameError:
+        rel = None
+
     youtube = None
 
     try:
@@ -148,6 +194,11 @@ if __name__ == "__main__":
             req = setup_private_request()
 
         backup_playlists(req)
+
+        if (rel):
+            req = setup_related_request()
+            backup_playlists(req)
+
     except HttpError as e:
         print "An HTTP error %d occurred:\n%s" % (e.resp.status, e.content)
 

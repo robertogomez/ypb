@@ -7,6 +7,7 @@ CLIENT_SECRETS_FILE = "client_secrets.json"
 # Optional configurations
 #CHANNELID = ""
 #USERNAME = ""
+#RELATED = True
 
 MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
