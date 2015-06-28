@@ -83,13 +83,13 @@ def setup_private_request():
 def setup_related_request():
     playlist_id_list = []
 
-    if (ident):
+    if (args.id or cfg_id and args.username is None):
         channel_request = youtube.channels().list(
             part="contentDetails",
             fields="items(contentDetails/relatedPlaylists)",
             id=ident
         )
-    elif (uname):
+    elif (args.username or cfg_username and args.id is None):
         channel_request = youtube.channels().list(
             part="contentDetails",
             fields="items(contentDetails/relatedPlaylists)",
@@ -164,8 +164,28 @@ if __name__ == "__main__":
                         action="store_true")
     args = parser.parse_args()
 
-    # Process user options
-    # Check the commandline arguments first, then the config vars if specified
+    # Check for mutual exclusion of config options
+    try:
+        if (CHANNELID and USERNAME):
+            sys.exit("May only specify either CHANNELID or USERNAME")
+    except NameError:
+        pass
+
+    # Process config options
+    try:
+        if CHANNELID:
+            cfg_id = True
+    except NameError:
+        cfg_id = False
+
+    try:
+        if USERNAME:
+            cfg_username = True
+    except NameError:
+        cfg_username = False
+
+    # Process commandline arguments
+    # Check args first, then config options if specified
     try:
         ident = args.id if (args.id) else CHANNELID
     except NameError:
@@ -186,9 +206,9 @@ if __name__ == "__main__":
     try:
         create_resource_obj()
 
-        if (ident):
+        if (args.id or cfg_id and args.username is None):
             req = setup_id_request()
-        elif (uname):
+        elif (args.username or cfg_username and args.id is None):
             req = setup_username_request()
         else:
             req = setup_private_request()
