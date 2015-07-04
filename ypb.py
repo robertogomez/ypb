@@ -93,81 +93,69 @@ def create_resource_object(id, username):
 
 # Creates a request for the user's playlists using their channel ID
 def create_id_request(id):
-   request = youtube.playlists().list(
-       part="id,snippet",
-       fields="items(id,snippet/title),nextPageToken",
-       channelId=id,
-       maxResults=MAX_RESULTS
-   )
-
-   return request
+    return youtube.playlists().list(
+        part="id,snippet",
+        fields="items(id,snippet/title),nextPageToken",
+        channelId=id,
+        maxResults=MAX_RESULTS
+    )
 
 # Creates a request for the user's playlists using their username
 # First uses a channel request to obtain channel ID from username
 def create_username_request(username):
-   channel_request = youtube.channels().list(
-       part="id",
-       forUsername=username,
-       maxResults=MAX_RESULTS
-   )
+    channel_request = youtube.channels().list(
+        part="id",
+        forUsername=username,
+        maxResults=MAX_RESULTS
+    )
 
-   channel_response = channel_request.execute()
+    channel_response = channel_request.execute()
 
-   try:
-       request = youtube.playlists().list(
-           part="id,snippet",
-           fields="items(id,snippet/title),nextPageToken",
-           channelId=channel_response["items"][0]["id"],
-           maxResults=MAX_RESULTS
-       )
-   except IndexError:
-       sys.exit("No channel found for {}".format(username))
-
-   return request
+    try:
+        return youtube.playlists().list(
+            part="id,snippet",
+            fields="items(id,snippet/title),nextPageToken",
+            channelId=channel_response["items"][0]["id"],
+            maxResults=MAX_RESULTS
+        )
+    except IndexError:
+        sys.exit("No channel found for {}".format(username))
 
 # Creates an authenticated request for accessing the user's private playlists
 def create_private_request():
-    request = youtube.playlists().list(
+    return youtube.playlists().list(
         part="id,snippet",
         fields="items(id,snippet/title),nextPageToken",
         mine="true",
         maxResults=MAX_RESULTS
     )
 
-    return request
-
 # Creates a channel request necessary for obtaining the channel's
 # related playlists, via channel ID
 def create_id_channel_request(id):
-    channel_request = youtube.channels().list(
+    return youtube.channels().list(
         part="contentDetails",
         fields="items(contentDetails/relatedPlaylists)",
         id=id
     )
 
-    return channel_request
-
 # Creates a channel request necessary for obtaining the channel's
 # related playlists, via username
 def create_username_channel_request(username):
-    channel_request = youtube.channels().list(
+    return youtube.channels().list(
         part="contentDetails",
         fields="items(contentDetails/relatedPlaylists)",
         forUsername=username
     )
 
-    return channel_request
-
 # Creates a channel request necessary for obtaining the channel's
 # related playlists, via authentication
 def create_private_channel_request():
-    channel_request = youtube.channels().list(
+    return youtube.channels().list(
         part="contentDetails",
         fields="items(contentDetails/relatedPlaylists)",
         mine="true"
     )
-
-    return channel_request
 
 # Create request for obtaining the user's related playlists
 def create_related_request(channel_request):
@@ -180,14 +168,12 @@ def create_related_request(channel_request):
         for playlist, playlist_id in channel["contentDetails"]["relatedPlaylists"].items():
             playlist_id_list.append(playlist_id)
 
-    request = youtube.playlists().list(
+    return youtube.playlists().list(
         part="id,snippet",
         fields="items(id,snippet/title),nextPageToken",
         id=",".join(playlist_id_list),
         maxResults=MAX_RESULTS
     )
-
-    return request
 
 # Backs-up playlists using the provided request
 def backup_playlists(playlists_request):
