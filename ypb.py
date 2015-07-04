@@ -71,8 +71,8 @@ def process_arguments():
 
 # Creates the resource object for interacting with the YouTube API
 # Sets up OAuth 2.0 for authorized requests if necessary
-def create_resource_object():
-    if (opt.id or opt.username):
+def create_resource_object(id, username):
+    if (id or username):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             developerKey=DEVELOPER_KEY)
     else:
@@ -92,11 +92,11 @@ def create_resource_object():
     return youtube
 
 # Creates a request for the user's playlists using their channel ID
-def create_id_request():
+def create_id_request(id):
    request = youtube.playlists().list(
        part="id,snippet",
        fields="items(id,snippet/title),nextPageToken",
-       channelId=opt.id,
+       channelId=id,
        maxResults=MAX_RESULTS
    )
 
@@ -104,10 +104,10 @@ def create_id_request():
 
 # Creates a request for the user's playlists using their username
 # First uses a channel request to obtain channel ID from username
-def create_username_request():
+def create_username_request(username):
    channel_request = youtube.channels().list(
        part="id",
-       forUsername=opt.username,
+       forUsername=username,
        maxResults=MAX_RESULTS
    )
 
@@ -121,7 +121,7 @@ def create_username_request():
            maxResults=MAX_RESULTS
        )
    except IndexError:
-       sys.exit("No channel found for {}".format(opt.username))
+       sys.exit("No channel found for {}".format(username))
 
    return request
 
@@ -138,22 +138,22 @@ def create_private_request():
 
 # Creates a channel request necessary for obtaining the channel's
 # related playlists, via channel ID
-def create_id_channel_request():
+def create_id_channel_request(id):
     channel_request = youtube.channels().list(
         part="contentDetails",
         fields="items(contentDetails/relatedPlaylists)",
-        id=opt.id
+        id=id
     )
 
     return channel_request
 
 # Creates a channel request necessary for obtaining the channel's
 # related playlists, via username
-def create_username_channel_request():
+def create_username_channel_request(username):
     channel_request = youtube.channels().list(
         part="contentDetails",
         fields="items(contentDetails/relatedPlaylists)",
-        forUsername=opt.username
+        forUsername=username
     )
 
     return channel_request
@@ -236,14 +236,14 @@ if __name__ == "__main__":
     opt.process_options()
 
     try:
-        youtube = create_resource_object()
+        youtube = create_resource_object(opt.id, opt.username)
 
         if (args.id or opt.id_config and args.username is None):
-            req = create_id_request()
-            ch_req = create_id_channel_request()
+            req = create_id_request(opt.id)
+            ch_req = create_id_channel_request(opt.id)
         elif (args.username or opt.username_config and args.id is None):
-            req = create_username_request()
-            ch_req = create_username_channel_request()
+            req = create_username_request(opt.username)
+            ch_req = create_username_channel_request(opt.username)
         else:
             req = create_private_request()
             ch_req = create_private_channel_request()
