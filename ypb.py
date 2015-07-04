@@ -135,7 +135,7 @@ def backup_playlists(playlists_request):
                 maxResults=MAX_RESULTS
             )
 
-            print "{}".format(playlist["snippet"]["title"])
+            print "{}".format(playlist["snippet"]["title"].encode("utf-8"))
 
             # Fetch pages of videos until end
             while playlist_items_request:
