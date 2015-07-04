@@ -56,6 +56,19 @@ class Options():
         except NameError:
             self.related = None
 
+def process_arguments():
+    parser = argparse.ArgumentParser(description="YouTube Playlist Backup script",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[argparser])
+
+    retrieval_method = parser.add_mutually_exclusive_group()
+    retrieval_method.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
+    retrieval_method.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
+    parser.add_argument("-r", "--related", help="Also retrieve related playlists (likes, history, etc.",
+                        action="store_true")
+
+    return parser.parse_args()
+
 # Creates the resource object for interacting with the YouTube API
 # Sets up OAuth 2.0 for authorized requests if necessary
 def create_resource_obj():
@@ -203,15 +216,7 @@ def backup_playlists(playlists_request):
             playlists_request, playlists_response)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="YouTube Playlist Backup script",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        parents=[argparser])
-    retrieval_method = parser.add_mutually_exclusive_group()
-    retrieval_method.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
-    retrieval_method.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
-    parser.add_argument("-r", "--related", help="Also retrieve related playlists (likes, history, etc.",
-                        action="store_true")
-    args = parser.parse_args()
+    args = process_arguments()
 
     opt = Options()
     opt.process_options()
