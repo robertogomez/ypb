@@ -10,12 +10,58 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
 
+class Options():
+    def __init__(self):
+        self.id_config = False
+        self.username_config = False
+        self.id = None
+        self.username = None
+        self.related = None
+
+    def process_options(self):
+        # Check for mutual exclusion of config options
+        try:
+            if (CHANNELID and USERNAME):
+                sys.exit("May only specify either CHANNELID or USERNAME")
+        except NameError:
+            pass
+
+        # Process config options
+        try:
+            if CHANNELID:
+                self.id_config = True
+        except NameError:
+            self.id_config = False
+
+        try:
+            if USERNAME:
+                self.username_config = True
+        except NameError:
+            self.username_config = False
+
+        # Process commandline arguments
+        # Check args first, then config options if specified
+        try:
+            self.id = args.id if (args.id) else CHANNELID
+        except NameError:
+            self.id = None
+
+        try:
+            self.username = args.username if (args.username) else USERNAME
+        except NameError:
+            self.username = None
+
+        try:
+            self.related = args.related if (args.related) else RELATED
+        except NameError:
+            self.related = None
+
 # Creates the resource object for interacting with the YouTube API
 # Sets up OAuth 2.0 for authorized requests if necessary
 def create_resource_obj():
     global youtube
 
-    if (ident or uname):
+    if (opt.id or opt.username):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             developerKey=DEVELOPER_KEY)
     else:
@@ -37,7 +83,7 @@ def setup_id_request():
    request = youtube.playlists().list(
        part="id,snippet",
        fields="items(id,snippet/title),nextPageToken",
-       channelId=ident,
+       channelId=opt.id,
        maxResults=MAX_RESULTS
    )
 
@@ -48,7 +94,7 @@ def setup_id_request():
 def setup_username_request():
    channel_request = youtube.channels().list(
        part="id",
-       forUsername=uname,
+       forUsername=opt.username,
        maxResults=MAX_RESULTS
    )
 
@@ -62,7 +108,7 @@ def setup_username_request():
            maxResults=MAX_RESULTS
        )
    except IndexError:
-       sys.exit("No channel found for {}".format(uname))
+       sys.exit("No channel found for {}".format(opt.username))
 
    return request
 
@@ -81,17 +127,17 @@ def setup_private_request():
 def setup_related_request():
     playlist_id_list = []
 
-    if (args.id or cfg_id and args.username is None):
+    if (args.id or opt.id_config and args.username is None):
         channel_request = youtube.channels().list(
             part="contentDetails",
             fields="items(contentDetails/relatedPlaylists)",
-            id=ident
+            id=opt.id
         )
-    elif (args.username or cfg_username and args.id is None):
+    elif (args.username or opt.username_config and args.id is None):
         channel_request = youtube.channels().list(
             part="contentDetails",
             fields="items(contentDetails/relatedPlaylists)",
-            forUsername=uname
+            forUsername=opt.username
         )
     else:
         channel_request = youtube.channels().list(
@@ -167,58 +213,24 @@ if __name__ == "__main__":
                         action="store_true")
     args = parser.parse_args()
 
-    # Check for mutual exclusion of config options
-    try:
-        if (CHANNELID and USERNAME):
-            sys.exit("May only specify either CHANNELID or USERNAME")
-    except NameError:
-        pass
-
-    # Process config options
-    try:
-        if CHANNELID:
-            cfg_id = True
-    except NameError:
-        cfg_id = False
-
-    try:
-        if USERNAME:
-            cfg_username = True
-    except NameError:
-        cfg_username = False
-
-    # Process commandline arguments
-    # Check args first, then config options if specified
-    try:
-        ident = args.id if (args.id) else CHANNELID
-    except NameError:
-        ident = None
-
-    try:
-        uname = args.username if (args.username) else USERNAME
-    except NameError:
-        uname = None
-
-    try:
-        rel = args.related if (args.related) else RELATED
-    except NameError:
-        rel = None
+    opt = Options()
+    opt.process_options()
 
     youtube = None
 
     try:
         create_resource_obj()
 
-        if (args.id or cfg_id and args.username is None):
+        if (args.id or opt.id_config and args.username is None):
             req = setup_id_request()
-        elif (args.username or cfg_username and args.id is None):
+        elif (args.username or opt.username_config and args.id is None):
             req = setup_username_request()
         else:
             req = setup_private_request()
 
         backup_playlists(req)
 
-        if (rel):
+        if (opt.related):
             req = setup_related_request()
             backup_playlists(req)
 
