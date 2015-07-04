@@ -71,9 +71,7 @@ def process_arguments():
 
 # Creates the resource object for interacting with the YouTube API
 # Sets up OAuth 2.0 for authorized requests if necessary
-def create_resource_obj():
-    global youtube
-
+def create_resource_object():
     if (opt.id or opt.username):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             developerKey=DEVELOPER_KEY)
@@ -90,6 +88,8 @@ def create_resource_obj():
 
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
             http=credentials.authorize(httplib2.Http()))
+
+    return youtube
 
 # Creates a request for the user's playlists using their channel ID
 def setup_id_request():
@@ -221,10 +221,8 @@ if __name__ == "__main__":
     opt = Options()
     opt.process_options()
 
-    youtube = None
-
     try:
-        create_resource_obj()
+        youtube = create_resource_object()
 
         if (args.id or opt.id_config and args.username is None):
             req = setup_id_request()
