@@ -136,28 +136,42 @@ def setup_private_request():
 
     return request
 
-# Create request for obtaining the user's related playlists
-def setup_related_request():
-    playlist_id_list = []
+# Creates a channel request necessary for obtaining the channel's
+# related playlists, via channel ID
+def create_id_channel_request():
+    channel_request = youtube.channels().list(
+        part="contentDetails",
+        fields="items(contentDetails/relatedPlaylists)",
+        id=opt.id
+    )
 
-    if (args.id or opt.id_config and args.username is None):
-        channel_request = youtube.channels().list(
-            part="contentDetails",
-            fields="items(contentDetails/relatedPlaylists)",
-            id=opt.id
-        )
-    elif (args.username or opt.username_config and args.id is None):
-        channel_request = youtube.channels().list(
-            part="contentDetails",
-            fields="items(contentDetails/relatedPlaylists)",
-            forUsername=opt.username
-        )
-    else:
-        channel_request = youtube.channels().list(
-            part="contentDetails",
-            fields="items(contentDetails/relatedPlaylists)",
-            mine="true"
-        )
+    return channel_request
+
+# Creates a channel request necessary for obtaining the channel's
+# related playlists, via username
+def create_username_channel_request():
+    channel_request = youtube.channels().list(
+        part="contentDetails",
+        fields="items(contentDetails/relatedPlaylists)",
+        forUsername=opt.username
+    )
+
+    return channel_request
+
+# Creates a channel request necessary for obtaining the channel's
+# related playlists, via authentication
+def create_private_channel_request():
+    channel_request = youtube.channels().list(
+        part="contentDetails",
+        fields="items(contentDetails/relatedPlaylists)",
+        mine="true"
+    )
+
+    return channel_request
+
+# Create request for obtaining the user's related playlists
+def setup_related_request(channel_request):
+    playlist_id_list = []
 
     channel_response = channel_request.execute()
 
@@ -226,15 +240,18 @@ if __name__ == "__main__":
 
         if (args.id or opt.id_config and args.username is None):
             req = setup_id_request()
+            ch_req = create_id_channel_request()
         elif (args.username or opt.username_config and args.id is None):
             req = setup_username_request()
+            ch_req = create_username_channel_request()
         else:
             req = setup_private_request()
+            ch_req = create_private_channel_request()
 
         backup_playlists(req)
 
         if (opt.related):
-            req = setup_related_request()
+            req = setup_related_request(ch_req)
             backup_playlists(req)
 
     except HttpError as e:
