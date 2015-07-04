@@ -92,7 +92,7 @@ def create_resource_object():
     return youtube
 
 # Creates a request for the user's playlists using their channel ID
-def setup_id_request():
+def create_id_request():
    request = youtube.playlists().list(
        part="id,snippet",
        fields="items(id,snippet/title),nextPageToken",
@@ -104,7 +104,7 @@ def setup_id_request():
 
 # Creates a request for the user's playlists using their username
 # First uses a channel request to obtain channel ID from username
-def setup_username_request():
+def create_username_request():
    channel_request = youtube.channels().list(
        part="id",
        forUsername=opt.username,
@@ -126,7 +126,7 @@ def setup_username_request():
    return request
 
 # Creates an authenticated request for accessing the user's private playlists
-def setup_private_request():
+def create_private_request():
     request = youtube.playlists().list(
         part="id,snippet",
         fields="items(id,snippet/title),nextPageToken",
@@ -170,7 +170,7 @@ def create_private_channel_request():
     return channel_request
 
 # Create request for obtaining the user's related playlists
-def setup_related_request(channel_request):
+def create_related_request(channel_request):
     playlist_id_list = []
 
     channel_response = channel_request.execute()
@@ -239,19 +239,19 @@ if __name__ == "__main__":
         youtube = create_resource_object()
 
         if (args.id or opt.id_config and args.username is None):
-            req = setup_id_request()
+            req = create_id_request()
             ch_req = create_id_channel_request()
         elif (args.username or opt.username_config and args.id is None):
-            req = setup_username_request()
+            req = create_username_request()
             ch_req = create_username_channel_request()
         else:
-            req = setup_private_request()
+            req = create_private_request()
             ch_req = create_private_channel_request()
 
         backup_playlists(req)
 
         if (opt.related):
-            req = setup_related_request(ch_req)
+            req = create_related_request(ch_req)
             backup_playlists(req)
 
     except HttpError as e:
