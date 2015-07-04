@@ -40,7 +40,7 @@ def setup_id_request():
        part="id,snippet",
        fields="items(id,snippet/title),nextPageToken",
        channelId=ident,
-       maxResults=50
+       maxResults=MAX_RESULTS
    )
 
    return request
@@ -51,7 +51,7 @@ def setup_username_request():
    channel_request = youtube.channels().list(
        part="id",
        forUsername=uname,
-       maxResults=50
+       maxResults=MAX_RESULTS
    )
 
    channel_response = channel_request.execute()
@@ -61,7 +61,7 @@ def setup_username_request():
            part="id,snippet",
            fields="items(id,snippet/title),nextPageToken",
            channelId=channel_response["items"][0]["id"],
-           maxResults=50
+           maxResults=MAX_RESULTS
        )
    except IndexError:
        sys.exit("No channel found for {}".format(uname))
@@ -74,7 +74,7 @@ def setup_private_request():
         part="id,snippet",
         fields="items(id,snippet/title),nextPageToken",
         mine="true",
-        maxResults=50
+        maxResults=MAX_RESULTS
     )
 
     return request
@@ -113,7 +113,7 @@ def setup_related_request():
         part="id,snippet",
         fields="items(id,snippet/title),nextPageToken",
         id=",".join(playlist_id_list),
-        maxResults=50
+        maxResults=MAX_RESULTS
     )
 
     return request
@@ -125,12 +125,14 @@ def backup_playlists(playlists_request):
         playlists_response = playlists_request.execute()
 
         for playlist in playlists_response["items"]:
+            video_count = 0
+
             # Assemble request for videos in each playlist
             playlist_items_request = youtube.playlistItems().list(
                 part="id,snippet",
                 fields="items(id,snippet/title),nextPageToken",
                 playlistId=playlist["id"],
-                maxResults=50
+                maxResults=MAX_RESULTS
             )
 
             # Fetch pages of videos until end
@@ -141,13 +143,15 @@ def backup_playlists(playlists_request):
 
                 # Print videos in each playlist
                 for i, video in enumerate(playlist_items_response["items"], start=1):
-                    print "{}. {}".format((i), video["snippet"]["title"].encode("utf-8"))
+                    print "{}. {}".format((i + video_count), video["snippet"]["title"].encode("utf-8"))
 
                 print
 
                 # Request next page of videos
                 playlist_items_request = youtube.playlistItems().list_next(
                     playlist_items_request, playlist_items_response)
+
+                video_count += MAX_RESULTS
 
         # Request next page of playlists
         playlists_request = youtube.playlists().list_next(

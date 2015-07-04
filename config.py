@@ -29,3 +29,5 @@ YOUTUBE_READONLY_SCOPE = "https://www.googleapis.com/auth/youtube.readonly"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
+MAX_RESULTS = 50
+
