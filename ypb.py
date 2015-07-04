@@ -135,23 +135,24 @@ def backup_playlists(playlists_request):
                 maxResults=MAX_RESULTS
             )
 
+            print "{}".format(playlist["snippet"]["title"])
+
             # Fetch pages of videos until end
             while playlist_items_request:
                 playlist_items_response = playlist_items_request.execute()
-
-                print "{}".format(playlist["snippet"]["title"])
 
                 # Print videos in each playlist
                 for i, video in enumerate(playlist_items_response["items"], start=1):
                     print "{}. {}".format((i + video_count), video["snippet"]["title"].encode("utf-8"))
 
-                print
-
                 # Request next page of videos
                 playlist_items_request = youtube.playlistItems().list_next(
                     playlist_items_request, playlist_items_response)
 
-                video_count += MAX_RESULTS
+                if playlist_items_request is not None:
+                    video_count += MAX_RESULTS
+                else:
+                    print
 
         # Request next page of playlists
         playlists_request = youtube.playlists().list_next(
