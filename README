@@ -6,6 +6,7 @@ SYNOPSIS
     ypb.py [-h]
     ypb.py [-i ID]
     ypb.py [-u USERNAME]
+    ypb.py [-r]
 
 DESCRIPTION
     ypb is a Python script which retrieves the playlists of a YouTube channel.
@@ -14,7 +15,7 @@ DESCRIPTION
     backups of public and/or private playlists are possible. Playlist
     information is sent to stdout.
 
-    Note: This is not a Youtube video downloader. The purpose of the script is
+    Note: This is not a YouTube video downloader. The purpose of the script is
     for recording playlist information, which is useful when videos are
     unexpectedly deleted from YouTube.
 
@@ -50,6 +51,13 @@ OPTIONS
         accounts. Usernames should not be confused with display names, which
         do not uniquely identify a channel.
 
+    -r, --related
+        Retrieve related playlists in addition to standard playlists. Related
+        playlists record metadata associated with a channel. These include
+        likes, favorites, uploads, watch later and history. The watch later
+        and history playlists may only be retrieved via authenticated
+        requests.
+
 CREDENTIALS
     To communicate with YouTube Data API the script requires proper
     authorization credentials. Since the keys and files required for
@@ -59,13 +67,21 @@ CREDENTIALS
     https://developers.google.com/youtube/registering_an_application for more
     information regarding authorization credentials.
 
+CONFIGURATION
+    The configuration file config.py stores authorization credentials and
+    options for controlling ypb. All options specified on the command line
+    supersede any stored in config.py.
+
 REQUIREMENTS
     Python 2.7
     google-api-python-client
 
 FILES
     config.py
-        Basic configuration file. 
+        Configuration file for authorization credentials and options.
+
+    resources.py
+        Module containing classes, functions, and settings.
 
     client-secrets.json
         Required for authenticated requests. See CREDENTIALS.
