@@ -85,7 +85,7 @@ def process_arguments():
     retrieval_method = parser.add_mutually_exclusive_group()
     retrieval_method.add_argument("-i", "--id", help="Retrieve playlists using channel ID")
     retrieval_method.add_argument("-u", "--username", help="Retrieve playlists using legacy YouTube username")
-    parser.add_argument("-r", "--related", help="Also retrieve related playlists (likes, history, etc.",
+    parser.add_argument("-r", "--related", help="Also retrieve related playlists (likes, history, etc.)",
                         action="store_true")
 
     return parser.parse_args()
