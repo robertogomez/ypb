@@ -106,7 +106,9 @@ def create_resource_object(id, username, arguments):
         storage = Storage("%s-oauth2.json" % sys.argv[0])
         credentials = storage.get()
 
-        if credentials is None or credentials.invalid:
+        if credentials.access_token_expired:
+            credentials.refresh(httplib2.Http())
+        elif credentials.invalid:
             credentials = run_flow(flow, storage, arguments)
 
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
